@@ -31,30 +31,6 @@ resource "aws_subnet" "private_subnet" {
   }
 }
 
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.mf_vpc.id
-  tags = {
-    Name = "mf-igw"
-  }
-}
-
-resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.mf_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
-
-  tags = {
-    Name = "public-route-table"
-  }
-}
-
-resource "aws_route_table_association" "public_rt_assoc" {
-  subnet_id      = aws_subnet.public_subnet.id
-  route_table_id = aws_route_table.public_rt.id
-}
 
 resource "aws_security_group" "public_sg" {
   vpc_id = aws_vpc.mf_vpc.id
@@ -107,24 +83,28 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-resource "aws_instance" "public-ec2-instance" {
-  ami           = "ami-0c38b837cd80f13bb" # Ubuntu Linux AMI
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public_subnet.id
-  security_groups = [aws_security_group.public_sg.id]
 
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.mf_vpc.id
   tags = {
-    Name = "public-ec2-instance"
+    Name = "mc-igw"
   }
 }
 
-resource "aws_instance" "private-ec2-instance" {
-  ami           = "ami-0c38b837cd80f13bb" # Ubuntu Linux AMI
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.private_subnet.id
-  security_groups = [aws_security_group.private_sg.id]
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.mf_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
 
   tags = {
-    Name = "private-ec2-instance"
+    Name = "public-route-table"
   }
+}
+
+resource "aws_route_table_association" "public_rt_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
 }
